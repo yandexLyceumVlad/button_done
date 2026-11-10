@@ -131,13 +131,6 @@ MAX без имени файла или с `Content-Type: application/octet-stre
 
 ## Запуск
 
-```bash
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-copy .env.example .env
-```
-
 В `.env` нужно указать:
 
 ```
@@ -154,81 +147,6 @@ YANDEX_LLM_MODEL=yandexgpt/latest
 python bot.py
 ```
 
-Для запросов к `platform-api2.max.ru` проверка TLS отключена (`verify=False`)
-по требованию проекта. Для запросов к Yandex OCR и Yandex LLM используется
-обычная проверка TLS.
-
-## Запуск в Docker
-
-В образ не попадают `data/`, `ocr/` и тесты (см. `.dockerignore`). Файл
-`.env` при сборке копируется в образ, поэтому работают оба способа запуска.
-
-1. Заполните `.env` (см. `.env.example`):
-
-```
-MAX_BOT_TOKEN=...
-YANDEX_API_KEY=...
-YANDEX_FOLDER_ID=...
-```
-
-2. Соберите образ:
-
-```bash
-docker compose build
-```
-
-3. Запуск через `docker compose` (переменные из `env_file: .env` имеют
-   приоритет над файлом внутри образа):
-
-```bash
-docker compose up -d
-```
-
-Или прямой запуск без compose:
-
-```bash
-docker run -d --name portfolio-bot --restart unless-stopped ^
-  -v "%cd%\data:/app/data" portfolio-bot:latest
-```
-
-На Linux/macOS вместо `^` используйте `\`, а путь — `"$(pwd)/data:/app/data"`.
-
-4. Логи и остановка:
-
-```bash
-docker compose logs -f
-docker compose down
-```
-
-Контейнер работает с `restart: unless-stopped` и часовым поясом
-`Europe/Moscow` (важно для границ отчётного периода). База и фото лежат на
-хосте в `./data` и переживают пересоздание контейнера.
-
-> ⚠️ `.env` с секретами попадает в слой образа. Не публикуйте такой образ в
-> открытых реестрах. Если секреты в образе недопустимы, соберите образ без
-> `.env` (оставьте только `.env.example`) и запускайте с
-> `--env-file .env` или через `docker compose`.
-
-На Linux папка `data/` должна быть доступна пользователю контейнера (uid 1000):
-
-```bash
-sudo chown -R 1000:1000 data
-```
-
-Примечание: бот использует Long Polling (`GET /updates`). По документации MAX
-Long Polling подходит для разработки и тестирования; для production
-рекомендуется Webhook.
-
-## Архив проекта
-
-Для передачи проекта целиком используйте tar-архив, в который включён `.env`:
-
-```bash
-tar -cf portfolio-bot.tar --exclude=.venv --exclude=.git --exclude=__pycache__ --exclude=data/tmp .
-```
-
-В архиве есть `Dockerfile`, `docker-compose.yml`, `.env`, исходный код и
-тесты. Папки `.venv`, `.git` и кэши Python исключены.
 
 ## Структура
 
@@ -238,8 +156,4 @@ db/               — слой БД: models.py (модели), database.py (со
 imgToFilds.py     — OCR и извлечение полей через Yandex LLM
 report.py         — отчётные периоды и разбор дат
 storage.py        — файлы фото, определение типа, PDF → PNG
-Dockerfile        — образ для запуска бота
-docker-compose.yml — запуск с томом ./data и .env
-tests/            — тесты парсера, периодов, БД и сценария бота
-ocr/              — отдельный тестовый OCR-проект, бот его не использует
 ```
