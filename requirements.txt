@@ -1,0 +1,4 @@
+requests>=2.31,<3
+SQLAlchemy>=2.0,<3
+PyMuPDF>=1.24
+Pillow>=10,<12

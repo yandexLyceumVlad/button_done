@@ -1,0 +1,25 @@
+services:
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: portfolio-bot:latest
+    container_name: portfolio-bot
+    init: true
+    restart: unless-stopped
+
+    # MAX_BOT_TOKEN и ключи Yandex OCR/LLM берутся из .env на хосте.
+    env_file:
+      - .env
+    environment:
+      TZ: Europe/Moscow
+
+    # data/documents.sqlite3 и data/photos/ остаются на хосте.
+    volumes:
+      - ./data:/app/data
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
